@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz and Puzzle App</title>
+    <style>
+        /* Same styles as before */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #74d3eb, #9face6);
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .app-container {
+            max-width: 400px;
+            width: 100%;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            margin-top: 20px;
+        }
+        .tile {
+            padding: 20px;
+            border: none;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 15px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #ffafbd, #ffc3a0);
+            color: #fff;
+            font-weight: bold;
+            font-size: 1.1em;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, background 0.3s;
+        }
+        .tile:hover {
+            transform: translateY(-5px);
+            background: linear-gradient(135deg, #ff8a9c, #ffb998);
+        }
+        .tile:active {
+            transform: translateY(2px);
+        }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #ddd;
+            border-radius: 10px;
+            margin-top: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(135deg, #4caf50, #81c784);
+            transition: width 0.3s;
+        }
+        .progress-text {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+        }
+        .close-btn {
+            background: red;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+        .close-btn:hover {
+            background: darkred;
+        }
+        .choice-btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            margin: 10px;
+            background: #6a11cb;
+            color: white;
+            cursor: pointer;
+        }
+        .choice-btn:hover {
+            background: #4a0ca1;
+        }
+        .question {
+            font-size: 1.2em;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <h1 style="color: #6a11cb; text-align: center; font-weight: bold;">Quiz and Puzzle App</h1>
+        <div id="subjectTiles">
+            <div class="tile" onclick="startQuiz('math')">Math</div>
+            <div class="tile" onclick="startQuiz('science')">Science</div>
+            <div class="tile" onclick="startQuiz('ela')">ELA</div>
+            <div class="tile" onclick="startQuiz('history')">History</div>
+        </div>
+        <div class="progress-bar">
+            <div id="progress" class="progress"></div>
+            <span id="progressText" class="progress-text">0 / 10,000</span>
+        </div>
+    </div>
+
+    <!-- Quiz Modal -->
+    <div class="modal" id="quizModal">
+        <div class="modal-content">
+            <h2>Quiz</h2>
+            <p id="questionText" class="question"></p>
+            <div id="optionsContainer"></div>
+            <button class="close-btn" onclick="closeQuiz()">Close Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        const subjects = {
+            math: {
+                quiz: [
+                    { question: "What is 5 + 7?", options: ["19", "14", "12", "11"], correct: "12" },
+                    { question: "What is 9 x 3?", options: ["27", "36", "30", "18"], correct: "27" },
+                    { question: "What is 15 / 3?", options: ["7", "5", "4", "3"], correct: "5" },
+                    { question: "What is 7 + 8?", options: ["16", "13", "14", "15"], correct: "15" },
+                    { question: "What is 12 - 4?", options: ["11", "10", "8", "9"], correct: "8" },
+                    { question: "What is 10 x 10?", options: ["190", "110", "120", "100"], correct: "100" },
+                    { question: "What is 64 ÷ 8?", options: ["9", "6", "7", "8"], correct: "8" },
+                    { question: "What is 6 x 7?", options: ["48", "36", "42", "40"], correct: "42" },
+                    { question: "What is 20 - 5?", options: ["10", "15", "12", "14"], correct: "15" },
+                    { question: "What is 9 + 11?", options: ["27", "18", "20", "19"], correct: "20" },
+                ]
+            },
+            science: {
+                quiz: [
+                    { question: "What planet is known as the Red Planet?", options: ["Mars", "Earth", "Venus", "Jupiter"], correct: "Mars" },
+                    { question: "What is the chemical symbol for water?", options: ["O2", "H2O", "CO2", "NaCl"], correct: "H2O" },
+                    { question: "What is the process of plants making food called?", options: ["Photosynthesis", "Respiration", "Transpiration", "Evaporation"], correct: "Photosynthesis" },
+                    { question: "What is the center of an atom called?", options: ["Proton", "Nucleus", "Electron", "Neutron"], correct: "Nucleus" },
+                    { question: "What force pulls objects toward Earth?", options: ["Friction", "Magnetism", "Gravity", "Inertia"], correct: "Gravity" },
+                    { question: "What gas do humans need to breathe?", options: ["Nitrogen", "Helium", "Carbon dioxide", "Oxygen"], correct: "Oxygen" },
+                    { question: "What is Earth's largest ocean?", options: ["Pacific", "Atlantic", "Indian", "Arctic"], correct: "Pacific" },
+                    { question: "What organ pumps blood in the body?", options: ["Lungs", "Heart", "Liver", "Kidney"], correct: "Heart" },
+                    { question: "What planet is known as the Gas Giant?", options: ["Mars", "Saturn", "Jupiter", "Uranus"], correct: "Jupiter" },
+                    { question: "What gas do plants release during photosynthesis?", options: ["Helium", "Carbon dioxide", "Nitrogen", "Oxygen"], correct: "Oxygen" },
+                ]
+            },
+            ela: {
+                quiz: [
+                    { question: "What is a synonym for 'quick'?", options: ["Fast", "Slow", "Heavy", "Light"], correct: "Fast" },
+                    { question: "What is the plural of 'child'?", options: ["Children", "Childs", "Childes", "Child"], correct: "Children" },
+                    { question: "What punctuation ends a question?", options: ["Question mark", "Period", "Comma", "Exclamation point"], correct: "Question mark" },
+                    { question: "What is the opposite of 'happy'?", options: ["Sad", "Joyful", "Excited", "Angry"], correct: "Sad" },
+                    { question: "What is a group of words that express a complete thought?", options: ["Sentence", "Phrase", "Clause", "Word"], correct: "Sentence" },
+                    { question: "What is a verb?", options: ["Action word", "Descriptive word", "Name of something", "Connecting word"], correct: "Action word" },
+                    { question: "What is an adjective?", options: ["Descriptive word", "Action word", "Noun", "Verb"], correct: "Descriptive word" },
+                    { question: "What is the past tense of 'run'?", options: ["Ran", "Running", "Runned", "Runs"], correct: "Ran" },
+                    { question: "What is a noun?", options: ["Person, place, or thing", "Action", "Description", "Linking"], correct: "Person, place, or thing" },
+                    { question: "What is a conjunction?", options: ["Word joining sentences", "Action", "Noun", "Verb"], correct: "Word joining sentences" },
+                ]
+            },
+            history: {
+                quiz: [
+                    { question: "Who was the first president of the USA?", options: ["George Washington", "Thomas Jefferson", "John Adams", "Abraham Lincoln"], correct: "George Washington" },
+                    { question: "In what year did World War II end?", options: ["1945", "1939", "1941", "1943"], correct: "1945" },
+                    { question: "What year was the Declaration of Independence signed?", options: ["1776", "1775", "1783", "1787"], correct: "1776" },
+                    { question: "Who discovered America?", options: ["Christopher Columbus", "Vasco da Gama", "Ferdinand Magellan", "James Cook"], correct: "Christopher Columbus" },
+                    { question: "What was the name of the ship that brought the Pilgrims to America?", options: ["Mayflower", "Santa Maria", "Pinta", "Nina"], correct: "Mayflower" },
+                    { question: "Who was known as the 'Iron Lady'?", options: ["Margaret Thatcher", "Queen Elizabeth I", "Indira Gandhi", "Angela Merkel"], correct: "Margaret Thatcher" },
+                    { question: "What year did the Titanic sink?", options: ["1912", "1905", "1920", "1918"], correct: "1912" },
+                    { question: "What was the ancient Egyptian writing system called?", options: ["Hieroglyphics", "Cuneiform", "Runes", "Pictograms"], correct: "Hieroglyphics" },
+                    { question: "Who was the leader of the Soviet Union during World War II?", options: ["Joseph Stalin", "Vladimir Lenin", "Mikhail Gorbachev", "Nikita Khrushchev"], correct: "Joseph Stalin" },
+                    { question: "What year did the Berlin Wall fall?", options: ["1989", "1990", "1987", "1985"], correct: "1989" },
+                ]
+            }
+        };
+
+        let currentSubject = null;
+        let currentQuestionIndex = 0;
+        let totalScore = 0;
+
+        function startQuiz(subject) {
+            currentSubject = subject;
+            currentQuestionIndex = 0;
+            showQuestion();
+            document.getElementById("quizModal").style.display = "flex";
+        }
+
+        function showQuestion() {
+            const subjectData = subjects[currentSubject];
+            const question = subjectData.quiz[currentQuestionIndex];
+            document.getElementById("questionText").textContent = question.question;
+
+            const optionsContainer = document.getElementById("optionsContainer");
+            optionsContainer.innerHTML = "";
+
+            question.options.forEach(option => {
+                const button = document.createElement("button");
+                button.textContent = option;
+                button.className = "choice-btn";
+                button.onclick = () => handleAnswer(option === question.correct, button);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function handleAnswer(isCorrect, button) {
+            button.style.backgroundColor = isCorrect ? "#4caf50" : "#f44336"; // Green or red
+            const buttons = document.querySelectorAll(".choice-btn");
+            buttons.forEach(btn => btn.disabled = true);
+
+            if (isCorrect) {
+                totalScore += 50;
+            } else if (totalScore > 0) {
+                totalScore -= 50; // Deduct points only if totalScore is greater than 0
+            }
+            
+            updateProgress();
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < subjects[currentSubject].quiz.length) {
+                    showQuestion();
+                } else {
+                    closeQuiz();
+                }
+            }, 1000);
+        }
+
+        function updateProgress() {
+            const progressBar = document.getElementById("progress");
+            const progressText = document.getElementById("progressText");
+
+            progressBar.style.width = `${(totalScore / 10000) * 100}%`;
+            progressText.textContent = `${totalScore} / 10,000`;
+        }
+
+        function closeQuiz() {
+            document.getElementById("quizModal").style.display = "none";
+        }
+    </script>
+</body>
+</html>
